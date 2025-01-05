@@ -5,19 +5,27 @@ import Pokemon from "../Pokemon/Pokemon";
 
 function PokemonList() {
   const DEFAULT_URL = "https://pokeapi.co/api/v2/pokemon";
-  const [pokemnonList, setPokemonList] = useState([]);
-  const [pokedex_url, setPokedexUrl] = useState(DEFAULT_URL);
-  const [nextUrl, setNextUrl] = useState(DEFAULT_URL)
-  const [prevUrl, setPrevUrl] = useState(DEFAULT_URL)
+  // const [pokemnonList, setPokemonList] = useState([]);
+  // const [pokedex_url, setPokedexUrl] = useState(DEFAULT_URL);
+  // const [nextUrl, setNextUrl] = useState(DEFAULT_URL)
+  // const [prevUrl, setPrevUrl] = useState(DEFAULT_URL)
+
+  const [pokemonListState, setPokemonListState] =useState({
+      pokemnonList: [],
+      pokedex_url: DEFAULT_URL,
+      nextUrl: DEFAULT_URL,
+      prevUrl: DEFAULT_URL
+  });
   
 
   async function downloadPokemon() {
-    const response = await axios.get(pokedex_url ? pokedex_url : DEFAULT_URL);
+    const response = await axios.get(pokemonListState.pokedex_url ? pokemonListState.pokedex_url : DEFAULT_URL);
 
     const pokemonResult = response.data.results; //array of pokemnon
 
-    setNextUrl(response.data.next);
-    setPrevUrl(response.data.previous);
+    // setNextUrl(response.data.next);
+    // setPrevUrl(response.data.previous);
+    // setPokemonListState((state)=> ({...state, nextUrl: response.data.next, prevUrl: response.data.previous}));
 
     const pokemonPromise = pokemonResult.map((pokemon) =>
       axios.get(pokemon.url)
@@ -32,16 +40,17 @@ function PokemonList() {
         name: pokemon.name,
         image: pokemon.sprites.other.dream_world.front_default,
         type: pokemon.types,
-      };
+      }
     });
-    setPokemonList(pokemonFinalList);
 
-    console.log(pokemonFinalList);
+    // setPokemonList(pokemonFinalList);
+    setPokemonListState({...pokemonListState, pokemnonList: pokemonFinalList, nextUrl: response.data.next, prevUrl: response.data.previous});
+
   }
 
   useEffect(() => {
     downloadPokemon();
-  }, [pokedex_url]); //if we pass [] empty array dependcies don't re-rendered. Change of any variable doesn't affect
+  }, [pokemonListState.pokedex_url]); //if we pass [] empty array dependcies don't re-rendered. Change of any variable doesn't affect
 
   return (
     <>
@@ -50,11 +59,13 @@ function PokemonList() {
             <h1>Pokemon list</h1>
         </div>
         <div className="page-controls">
-          <button onClick={()=> setPokedexUrl(prevUrl)}>Prev</button>
-          <button onClick={()=> setPokedexUrl(nextUrl)}>Next</button>
+          <button onClick={()=> setPokemonListState({...pokemonListState, pokedex_url: pokemonListState.prevUrl})}>Prev</button>
+
+          <button onClick={()=> setPokemonListState({...pokemonListState, pokedex_url: pokemonListState.nextUrl})}>Next</button>
+
         </div>
         <div className="pokemon-list">
-          {pokemnonList.map((pokemon) => (
+          {pokemonListState.pokemnonList.map((pokemon) => (
             <Pokemon name={pokemon.name} key={pokemon.id} url={pokemon.image} id={pokemon.id} />
           ))}
         </div>
